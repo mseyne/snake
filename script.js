@@ -1,5 +1,8 @@
 // SET VARIABLES
 var game = 1;
+var escaped = false;
+var debug = true;
+
 var width = 640;
 var height = 480;
 var grid = 20;
@@ -7,10 +10,10 @@ var speed = 10;
 var c = document.getElementById("snake");
 var ctx = c.getContext("2d");
 
+var board = [];
+
 // COLORS
 var wall_color = "#673ab7";
-
-var debug = true;
 
 var score = 0;
 var bestScore = 0;
@@ -41,10 +44,7 @@ var walls_collisions = {
     bottomRightY: height-grid,
 }
 
-// KEYBOARD
-var escaped = false;
-
-// GRID
+// DEBUG
 function show_grid() {
     ctx.lineWidth = 1;
     ctx.strokeStyle = "#e8eaf6";
@@ -80,13 +80,47 @@ function display_position_text(){
     ctx.fillText(string,30,50);
 }
 
+function console_board(){
+    for (var i = 0; i < board.length; i += 3){
+        var occupied = "O";
+        if (board[i] === true) {
+            occupied = "X";
+        }
+        console.log(occupied);
+    }
+    
+    for (var i = 0; i < board.length; i += 3){
+        console.log(board[i], board[i+1])
+    }
+}
+
 // SETTING FUNCTIONS
+
+function store_coordinates(x, y, s) {
+    // x & y are coordinates, bool: is there snake body
+    board.push(x);
+    board.push(y);
+    board.push(s);
+}
+
+function set_board() {
+    for (var y = grid; y < height-40; y += grid) {
+        for (var x = grid; x < width-40; x += grid) {
+            store_coordinates(x, y, true);
+        }
+    }
+}
+
 function set_player_movement() {
     document.addEventListener("keydown", (event) => {
         var key = event.key;
 
         if (key === 'Escape') {
-            escaped = true;
+            if ( escaped === false ) {
+                escaped = true;
+            } else {
+                escaped = false;
+            }
         }
         if (key === 'ArrowLeft') {
             snake.direction = "left";
@@ -155,11 +189,12 @@ function check_gold_collision(){
 }
 
 function set_new_gold(){
-    // The new position of the next gold shouldn't be to the same place of the snake body
-    var x = 640/20;
-    var y = 480/20;
-    var random
-    console.log("gold x:", x, " y:", y);
+    var maxX = 600/20;
+    var maxY = 440/20;
+    var randomX = (Math.floor(Math.random()*maxX) + 1)*20;
+    var randomY = (Math.floor(Math.random()*maxY) + 1)*20;
+    gold.x = randomX;
+    gold.y = randomY;
 }
 
 // DRAWING FUNCTIONS
@@ -210,6 +245,10 @@ function draw_menu(){
     function load() {
         set_player_movement();
         set_walls();
+        set_board();
+        if (debug) {
+            console_board();
+        }
     }
 
     function draw() {
