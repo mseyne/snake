@@ -1,0 +1,14 @@
+écriture concept/design, dessin sur papier du jeu
+wirefram ui, mockup graphique du jeu
+development programming
+graphic and sound implementation
+debug, finalization
+release
+
+For every game project
+Mockup the game screens by hand, using Pencil, or in graphics software - before you start coding the game
+Write a document describing the game, win conditions, lose conditions, and features you intend to include - before you start coding
+Create a minimal demo before building out the whole things
+Store your mockups, design documentation, and game progress in a versionable repository (GitHub)
+Include tests :D
+Include documentation on how to build and run the game
