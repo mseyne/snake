@@ -24,7 +24,8 @@ var snake = {
     y: (height/2),
     speedTimer: speed, // millisecond step for the snake move
     direction: 'right',
-    size: 1
+    size: 1,
+    coordinates: []
 };
 
 var gold = {
@@ -80,18 +81,30 @@ function display_position_text(){
     ctx.fillText(string,30,50);
 }
 
-function console_board(){
-    for (var i = 0; i < board.length; i += 3){
-        var occupied = "O";
-        if (board[i] === true) {
-            occupied = "X";
+function display_console_board(){
+    var occupied = "O";
+    var row = "";
+    var c = 0; // count columns before jump to next line
+
+    for (var i = 2; i < board.length; i += 3){
+        if (c === 30) {
+            console.log(row);
+            row = "";
+            c = 0;
         }
-        console.log(occupied);
+        if (board[i] === false) {
+            occupied = "X";
+        } else {
+            occupied = "O";
+        }
+        row += occupied;
+        c++;
     }
+    console.log(row);
     
-    for (var i = 0; i < board.length; i += 3){
-        console.log(board[i], board[i+1])
-    }
+    // for (var i = 0; i < board.length; i += 3){
+    //     console.log(board[i], board[i+1])
+    // }
 }
 
 // SETTING FUNCTIONS
@@ -104,9 +117,18 @@ function store_coordinates(x, y, s) {
 }
 
 function set_board() {
-    for (var y = grid; y < height-40; y += grid) {
-        for (var x = grid; x < width-40; x += grid) {
+    for (var y = grid; y <= height-40; y += grid) {
+        for (var x = grid; x <= width-40; x += grid) {
             store_coordinates(x, y, true);
+        }
+    }
+}
+
+function update_board() {
+    for (var i = 0; i < board.length; i += 3) {
+        console.log(board[i], board[i+1], board[i+2]);
+        for (var j = 0; j < snake.coordinates.length; j++) {
+            console.log(snake.coordinates[j][0], snake.coordinates[j][1]);
         }
     }
 }
@@ -118,9 +140,11 @@ function set_player_movement() {
         if (key === 'Escape') {
             if ( escaped === false ) {
                 escaped = true;
-            } else {
+            } /* else {
                 escaped = false;
-            }
+                game = true;
+                update();
+            } */
         }
         if (key === 'ArrowLeft') {
             snake.direction = "left";
@@ -151,23 +175,19 @@ function set_walls() {
 
 // GAMEPLAY FUNCTIONS
 function snake_move(){
-    snake.speedTimer--;
-    if (snake.speedTimer === 0) {
-        switch (snake.direction) {
-            case "left":
-                snake.x -= grid;
-                break;
-            case "right":
-                snake.x += grid;
-                break;
-            case "up":
-                snake.y -= grid;
-                break;
-            case "down":
-                snake.y += grid;
-                break;
-        }
-        snake.speedTimer = speed;
+    switch (snake.direction) {
+        case "left":
+            snake.x -= grid;
+            break;
+        case "right":
+            snake.x += grid;
+            break;
+        case "up":
+            snake.y -= grid;
+            break;
+        case "down":
+            snake.y += grid;
+            break;
     }
 }
 
@@ -197,13 +217,26 @@ function set_new_gold(){
     gold.y = randomY;
 }
 
+function snake_save_coordinates(){
+    var newArray = [];
+    for (var i = 0; i < snake.size; i++){
+        if (i === 0) {
+            newArray.push([snake.x, snake.y]);
+        }
+        if (i > 0) {
+            newArray.push(snake.coordinates[i-1]);
+        }
+    }
+    snake.coordinates = newArray;
+}
+
 // DRAWING FUNCTIONS
 function draw_background(){
     ctx.fillStyle = "#7986cb";
     ctx.fillRect(grid, grid, width-(2*grid), height-(2*grid));
 }
 
-function draw_snake(){
+function draw_snake_head(){
     ctx.fillStyle = "#e57373";
     switch (snake.direction) {
         case "left":
@@ -219,6 +252,10 @@ function draw_snake(){
             ctx.fillRect(snake.x + snake.offset, snake.y, grid - (snake.offset*2), grid - snake.offset);
             break;
     }
+}
+
+function draw_snake_body(){
+
 }
 
 function draw_gold(){
@@ -241,13 +278,15 @@ function draw_menu(){
     ctx.fillText(bestScore,220,(height/2) + 42);
 }
 
+
+// MAIN FUNCTION
 ;(function () {
     function load() {
         set_player_movement();
         set_walls();
         set_board();
         if (debug) {
-            console_board();
+            //is loaded if debug is on
         }
     }
 
@@ -255,39 +294,49 @@ function draw_menu(){
         if (game) {
             draw_background();
             draw_gold()
-            draw_snake();
+            draw_snake_head();
+            draw_snake_body();
         } else {
             draw_menu();
         }
     }
 
-    function debug_tools() {
-        show_grid();
-        draw_walls_collision();
-        display_position_text();
-    }
-
-    function main() {
-        var req = window.requestAnimationFrame( main );
+    function update() {
+        var req = window.requestAnimationFrame( update );
         draw();
         if (game) {
-            snake_move();
-            check_wall_collision();
-            check_gold_collision();
-            // check_snake_self_collision();
+            snake.speedTimer--;
+            if (snake.speedTimer === 0) {
+                snake_move();
+                snake_save_coordinates();
+                check_wall_collision();
+                check_gold_collision();
+                // check_snake_self_collision();
+                update_board(); // should check if the coordinate that collide in the wall are saved
+                snake.speedTimer = speed;
+                if (debug) {
+                    //is called at each snake move
+                    display_console_board();
+                }
+            }
         } else {
             // game_over();
         }
         if (escaped) {
             window.cancelAnimationFrame(req);
+            game = false;
+            draw();
         }
         if (debug) {
-            debug_tools();
+            //is called at each game frame
+            show_grid();
+            draw_walls_collision();
+            display_position_text();
         }
     } 
     
     load();
     draw();
-    main();
+    update();
 })();
       
